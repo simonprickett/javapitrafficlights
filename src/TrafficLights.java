@@ -5,39 +5,47 @@ import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
 
 public class TrafficLights {
-	private static GpioController gpio; 
+	private static GpioController gpio = null; 
+	private static GpioPinDigitalOutput red = null;
+	private static GpioPinDigitalOutput yellow = null;
+	private static GpioPinDigitalOutput green = null;
 
-	private static void allLightsOff() {
-	}
+	public static void main(final String[] args) throws InterruptedException {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				if (gpio != null) {
+					red.low();
+					yellow.low();
+					green.low();
+					gpio.shutdown();
+				}
+			}
+		});
 
-	public static void main(String[] args) throws InterruptedException {
 		gpio = GpioFactory.getInstance();
 
-		final GpioPinDigitalOutput red = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_13, "Red", PinState.LOW);
-		final GpioPinDigitalOutput yellow = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_12, "Red", PinState.LOW);
-		final GpioPinDigitalOutput green = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_14, "Red", PinState.LOW);
+		red = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_13, "Red", PinState.LOW);
+		yellow = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_12, "Red", PinState.LOW);
+		green = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_14, "Red", PinState.LOW);
 
-		red.high();
+		while (true) {
+			red.high();
+			Thread.sleep(3000);
 
-		Thread.sleep(3000);
+			yellow.high();
+			Thread.sleep(1000);
 
-		yellow.high();
+			red.low();
+			yellow.low();
+			green.high();
+			Thread.sleep(5000);
 
-		Thread.sleep(1000);
+			green.low();
+			yellow.high();
+			Thread.sleep(2000);
 
-		red.low();
-		yellow.low();
-		green.high();
-
-		Thread.sleep(5000);
-
-		green.low();
-		yellow.high();
-
-		Thread.sleep(2000);
-
-		yellow.low();
-
-		gpio.shutdown();
+			yellow.low();
+		}
 	}
 }
